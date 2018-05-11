@@ -1,0 +1,100 @@
+
+/**********************************************************************/
+/* Compress_Prolog::execute
+/**********************************************************************/
+// int Compress_Prolog::execute( const std::pair< int, pair<int, int>> &node, CnCContext &context ) const {
+
+//   Node input;
+//   int n, l, h, new_h;
+//   h = node.first;
+//   n = node.second.first;
+//   l = node.second.second;
+
+//   input_terminals[0]->get(node, input);
+//   int k = context.k;
+
+//   if ( !input.has_children ) { //if the node is a leaf
+
+//     if( n == 0){
+//       output_terminals[1].put( node, input);
+//     }
+//     else{
+
+//       // cout << "Term 1-- " << global_co_height << "  " << n << "  " << l << "\n";
+//       //For compress we have to work from bottom, so set the max height so that new thread is invoked
+//       output_terminals[1].put( make_pair(global_co_height, make_pair(n,l)), Node( n, l, k, Vector(), Vector(k), false ));
+
+//       //We have to trigger the new thread for compress_doIT, so set height as max_height
+//       if( l & 0x1uL){
+//          output_terminals[2].put( std::make_pair( global_co_height, make_pair( n-1, l/2)), input);
+//          // cout << "Compress_Prolog Term 0--- " << h << "  " << n << "  " << l << "\n";
+
+//       }
+//       else{
+//         // cout << "----Compress_Prolog tItem put: " << global_co_height << "  " << n-1 << "  " << l/2 << "\n";
+//          output_terminals[0].put( std::make_pair( global_co_height, make_pair( n-1, l/2)), input);
+//       }
+//     }
+//   }
+
+//   return CnC::CNC_Success;
+// }
+
+
+/**********************************************************************/
+/* Compress_doIt::execute
+/**********************************************************************/
+// int Compress_doIt::execute( const std::pair< int, pair<int, int>> &node, CnCContext &context ) const {
+
+//   Node left;
+//   Node right;
+//   int k = context.k;
+//   int n, l, h, new_h;
+//   h = node.first;
+//   n = node.second.first;
+//   l = node.second.second;
+
+//   if( h == global_co_height)
+//       new_h = 1;
+//     else
+//       new_h = h + 1;
+
+
+//   input_terminals[0]->get(node, left);
+//   input_terminals[1]->get(node, right);
+
+//   Vector s( left.s | right.s );
+//   Vector d(s * (*(context.hgT)));
+
+//   Vector sValue(d.data, 0, k);
+//   Vector dValue(d.data, k, 2 * k);
+    
+//   // cout << "Compress_doIt Item recieved: " << h << "  " << n << "  " << l << "\n";
+
+
+//   if( n == 0){
+
+//       // cout << "Term 1-- " << new_h << "  " << n << "  " << l << "\n";
+
+//     output_terminals[1].put( make_pair(new_h, make_pair(n,l)), Node( n, l, k, sValue, dValue, true) );
+//   }
+
+//   else{
+//       // cout << "Term 1-- " << new_h << "  " << n << "  " << l << "\n";
+
+//     output_terminals[1].put( make_pair(new_h, make_pair(n,l)), Node( n, l, k, Vector(), dValue, true) );
+
+//     if( l & 0x1uL){
+//       output_terminals[2].put( std::make_pair( new_h, make_pair( n-1, l/2)), Node( n-1, l/2, k, sValue, Vector(), false ));
+//     }
+//     else{
+//       output_terminals[0].put( std::make_pair( new_h, make_pair( n-1, l/2)), Node( n-1, l/2, k, sValue, Vector(), false ));
+
+//       if( new_h != global_co_height ){
+//         // cout << "Compress_doIt Item recall: " << new_h << "  " << n-1 << "  " << l/2 << "\n";
+//         this->execute( std::make_pair( new_h, make_pair( n-1, l/2)), context);
+//       }
+//     }   
+//   }
+//   return CnC::CNC_Success;
+// }
