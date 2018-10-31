@@ -79,8 +79,6 @@ struct OutputTerminal {
   // void put(int h, K key, V value) const {
   //     item_collection->put(key, value);
   // }
-
-
 };
 
 
@@ -325,7 +323,7 @@ public:
   max_level(max_level)
   {
 
-    for( int i =0, j = max_height; i < max_height; i++){
+    for( int i = 0, j = max_height; i < max_height; i++){
       height_map[i] = j;
 
       if( j == 1)
@@ -657,14 +655,14 @@ int Printer::execute(const std::pair<int, pair<int, int>> &node, CnCContext &con
   input_terminals[0]->get(node, nodeInfo);
   // cout << "check 3 \n";
 
-  if( !nodeInfo.has_children )  
-  std::cout << "Printer:: Node with info: (Key:"
-            << h << " (" 
-            << n << ", " 
-            << l << "), " 
-            << nodeInfo.toString() 
-            << ")" 
-            << std::endl;
+  // if( !nodeInfo.has_children )  
+  // std::cout << "Printer:: Node with info: (Key:"
+  //           << h << " (" 
+  //           << n << ", " 
+  //           << l << "), " 
+  //           << nodeInfo.toString() 
+  //           << ")" 
+  //           << std::endl;
 
   // if( nodeInfo.has_children & new_h != global_co_height){ 
   if( nodeInfo.has_children ){ 
@@ -1196,7 +1194,38 @@ struct Project_test: CnCContext{
 
   }
 
+  // void check_result( CnC::item_collection<std::pair< int, pair<int, int>>, Node> result_h, int n, int l, int h){
+
+
+  //   Node node_1, node_h;
+  //   int new_h;
+
+  //   if( h == 1)
+  //     new_h = global_co_height;
+  //   else
+  //     h = h-1;
+
+  //   result_1.get( make_pair(1, make_pair(n,l)), node_1);
+  //   result_h.get( make_pair(h, make_pair(n,l)), node_h);
+
+  //   cout << "Without coarsening: " << node_1.toString() << "  With coarsening " << node_h.toString() << "\n";
+
+  //   if( node_1.has_children && node_h.has_children ){
+  //       check_result(result_1, result_h, n+1, 2*l, new_h);
+  //       check_result(result_1, result_h, n+1, 2*l+1, new_h);
+  //   }
+  //   else if( !node_1.has_children && !node_h.has_children ){
+  //     return;
+  //   }
+  //   else{
+  //     cout << "Error!\n";
+  //   }
+  // }
+
+
 };
+
+
 
 
 /**********************************************************************/
@@ -1331,6 +1360,137 @@ struct binary_op_test: CnCContext{
 };
 
 
+/**********************************************************************/
+/* Multiplication test
+/**********************************************************************/
+struct multiplication: CnCContext{
+
+  /*----------------------------------------------------------------*/
+  /* Item Collections
+  /*----------------------------------------------------------------*/
+   CnC::item_collection<std::pair< int, pair<int, int>>, Node> projectA_item;
+   CnC::item_collection<std::pair< int, pair<int, int>>, Node> projectB_item; 
+   CnC::item_collection<std::pair< int, pair<int, int>>, Node> multiplication_item;
+
+
+  using OutputTerminalType = OutputTerminal<std::pair<int, pair<int, int>>, Node>;
+
+  /*----------------------------------------------------------------*/
+  /* Tag Collections
+  /*----------------------------------------------------------------*/
+   CnC::tag_collection<std::pair< int, pair<int, int>>> projectA_tag;
+   CnC::tag_collection<std::pair< int, pair<int, int>>> projectB_tag;
+   CnC::tag_collection<std::pair< int, pair<int, int>>> printer_tag;
+   CnC::tag_collection<std::pair< int, pair<int, int>>> multiplication_tag;
+
+  /*----------------------------------------------------------------*/
+  /* Step Collections
+  /*----------------------------------------------------------------*/
+
+   CnC::step_collection<Project> projectA_step;
+   CnC::step_collection<Project> projectB_step;
+   CnC::step_collection<Printer> printer_step;
+   CnC::step_collection<BinaryOp> multiplication_step;
+
+
+  multiplication( int k, double thresh, int max_level,  int height, double (*funcA)(double), double (*funcB)(double))
+  :
+  CnCContext( k, thresh, max_level, height),
+  projectA_item(*this),
+  projectB_item(*this), 
+  projectA_tag(*this), 
+  projectB_tag(*this), 
+  printer_tag(*this), 
+  multiplication_item(*this), 
+  multiplication_tag(*this),
+
+  /*----------------------------------------------------------------*/
+  /* Declare projectA_step
+  /*----------------------------------------------------------------*/
+  projectA_step(
+              *this, 
+              "projectA_step", 
+              Project(
+                      funcA, 
+                      std::vector<CnC::item_collection<std::pair< int, pair<int, int>>, Node> *>{},
+                      std::vector<OutputTerminalType> {
+                          OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&projectA_tag}),
+                          OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&multiplication_tag})}
+                      )
+              ),
+
+  /*----------------------------------------------------------------*/
+  /* Declare projectB_step
+  /*----------------------------------------------------------------*/
+  projectB_step(
+              *this, 
+              "projectB_step", 
+              Project(
+                      funcB, 
+                      std::vector<CnC::item_collection<std::pair< int, pair<int, int>>, Node> *>{},
+                      std::vector<OutputTerminalType> {
+                          OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&projectB_tag}),
+                          OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {})}
+                      )
+              ),
+
+  /*----------------------------------------------------------------*/
+  /* Declare subtract_1_step
+  /*----------------------------------------------------------------*/
+  multiplication_step(
+                *this, 
+                "multiplication_step", 
+                BinaryOp(
+                        &mul, 
+                        &mul_scale_factor, 
+                        std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&projectA_item, &projectB_item},
+                        std::vector<OutputTerminalType>{
+                            OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&multiplication_tag}),
+                            OutputTerminalType(&multiplication_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&printer_tag}),
+                            OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {})}
+                        )
+                ),
+
+  /*----------------------------------------------------------------*/
+  /* Declare printer_step
+  /*----------------------------------------------------------------*/
+  printer_step(
+            *this, 
+            "printer_step", 
+            Printer( 
+              std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{&multiplication_item}, 
+              std::vector<OutputTerminalType>{})
+            )
+
+    {
+
+      /*----------------------------------------------------------------*/
+      /* Tag Prescription
+      /*----------------------------------------------------------------*/
+      projectA_tag.prescribes(projectA_step, *this);
+      projectB_tag.prescribes(projectB_step, *this);
+      printer_tag.prescribes(printer_step, *this);
+      multiplication_tag.prescribes(multiplication_step, *this);
+
+      /*----------------------------------------------------------------*/
+      /* Steps Produce Consume
+      /*----------------------------------------------------------------*/
+      projectA_step.produces(projectA_item);
+      projectB_step.produces(projectB_item);
+
+      multiplication_step.consumes(projectA_item);
+      multiplication_step.consumes(projectB_item);
+      multiplication_step.produces(projectA_item);
+      multiplication_step.produces(projectB_item);
+      multiplication_step.produces(multiplication_item);
+
+      printer_step.consumes(multiplication_item);
+  }
+
+};
+
+
+
 int main(int argc, char *argv[]) {
    int k = 5;
    int max_level;
@@ -1357,14 +1517,29 @@ int main(int argc, char *argv[]) {
 
   
 
+   // high_resolution_clock::time_point t1 = high_resolution_clock::now();
+   // Project_test obj(k, thresh, max_level, height, test[0], test[1] );
+   // obj.projectA_tag.put(std::make_pair(height, make_pair(0, 0)));
+   // obj.projectB_tag.put(std::make_pair(height, make_pair(0, 0)));
+   // obj.printer_tag.put(std::make_pair(height, make_pair(0, 0)));
+   // obj.wait();
+
    high_resolution_clock::time_point t1 = high_resolution_clock::now();
-   Project_test obj(k, thresh, max_level, height, test[0], test[1] );
+   multiplication obj(k, thresh, max_level, height, test[0], test[1] );
    obj.projectA_tag.put(std::make_pair(height, make_pair(0, 0)));
    obj.projectB_tag.put(std::make_pair(height, make_pair(0, 0)));
-   obj.printer_tag.put(std::make_pair(height, make_pair(0, 0)));
+   // obj.printer_tag.put(std::make_pair(height, make_pair(0, 0)));
    obj.wait();
 
 
+   // Project_test obj1(k, thresh, max_level, height, test[0], test[1] );
+   // obj1.projectA_tag.put(std::make_pair(1, make_pair(0, 0)));
+   // obj1.projectB_tag.put(std::make_pair(1, make_pair(0, 0)));
+   // obj.printer_tag.put(std::make_pair(height, make_pair(0, 0)));
+   // obj1.wait();
+
+
+   // check_result( obj1.subtract_2_item, obj.subtract_2_item);
    // binary_op_test obj(k, thresh, max_level, height, test[1], test[0] );
    // obj.projectA_tag.put(std::make_pair(height, make_pair(0, 0)));
    // obj.projectB_tag.put(std::make_pair(height, make_pair(0, 0)));
