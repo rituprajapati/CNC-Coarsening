@@ -829,7 +829,6 @@ int Reconstruct_Prolog::execute( const std::pair< int, pair<int, int>> &node, Cn
   return CnC::CNC_Success;
 }
 
-
 /**********************************************************************/
 /* Reconstruct_doIt::execute
 /**********************************************************************/
