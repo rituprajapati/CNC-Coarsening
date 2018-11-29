@@ -699,11 +699,11 @@ int BinaryOp::execute(const std::pair< int, pair<int, int>> &root_node, CnCConte
 /**********************************************************************/
 /* Compress_doIt::execute
 /**********************************************************************/
-int Compress_doIt::execute( const std::pair< int, pair<int, int>> &subtree_root_node, CnCContext &context ) const {
+int Compress_doIt::execute( const std::pair< int, pair<int, int>> &root_node, CnCContext &context ) const {
 
   stack<std::pair< int, pair<int, int>>> subtree_stack;
   queue<std::pair< int, pair<int, int>>> levels;
-  levels.push(subtree_root_node);
+  levels.push(root_node);
   int k = context.k;
 
   //put the inverted subtree in stack 
@@ -729,6 +729,7 @@ int Compress_doIt::execute( const std::pair< int, pair<int, int>> &subtree_root_
 
   //Process each node in stack 
   while( !subtree_stack.empty() ){
+
     Node nodeInfo;
     Node left;
     Node right;
@@ -782,8 +783,6 @@ int Compress_doIt::execute( const std::pair< int, pair<int, int>> &subtree_root_
   
   return CnC::CNC_Success;
 }
-
-
 
 
 /**********************************************************************/
@@ -1368,10 +1367,10 @@ struct addition_test : CnCContext {
                   "projectA_step", 
                   Project(
                           funcA, 
-                          std::vector<CnC::item_collection<std::pair<int, int>, Node> *>{},
+                          std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{},
                           std::vector<OutputTerminalType> {
-                              OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&projectA_tag}),
-                              OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&compress_doIt_funcA_tag})}
+                              OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&projectA_tag}),
+                              OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&compress_doIt_funcA_tag})}
                           )
                   ),
  
@@ -1383,10 +1382,10 @@ struct addition_test : CnCContext {
                   "projectB_step", 
                   Project(
                           funcB, 
-                          std::vector<CnC::item_collection<std::pair<int, int>, Node> *>{},
+                          std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{},
                           std::vector<OutputTerminalType> {
-                              OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&projectB_tag}),
-                              OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&compress_doIt_funcB_tag})}
+                              OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&projectB_tag}),
+                              OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&compress_doIt_funcB_tag})}
                           )
                   ),
     
@@ -1398,7 +1397,7 @@ struct addition_test : CnCContext {
                 *this, 
                 "printer_step", 
                 Printer( 
-                  std::vector<CnC::item_collection<std::pair<int, int>, Node> *>{&reconstruct_result_item}, 
+                  std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{&reconstruct_result_item}, 
                   std::vector<OutputTerminalType>{})
                 ),
 
@@ -1409,11 +1408,11 @@ struct addition_test : CnCContext {
                                 *this, 
                                 "compress_doIt_funcA_step", 
                                 Compress_doIt( 
-                                    std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&compressA_left_item, &projectA_item, &compressA_right_item}, 
+                                    std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&compressA_left_item, &projectA_item, &compressA_right_item}, 
                                     std::vector<OutputTerminalType>{
-                                    OutputTerminalType(&compressA_left_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&compress_doIt_funcA_tag}),
-                                    OutputTerminalType(&funcA_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&gaxpyOP_tag}),
-                                    OutputTerminalType(&compressA_right_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {})})
+                                    OutputTerminalType(&compressA_left_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {}),
+                                    OutputTerminalType(&funcA_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&gaxpyOP_tag}),
+                                    OutputTerminalType(&compressA_right_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {})})
                               ),
 
 
@@ -1424,11 +1423,11 @@ struct addition_test : CnCContext {
                                 *this, 
                                 "compress_doIt_funcB_step", 
                                 Compress_doIt( 
-                                    std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&compress_prologB_left_item, &compress_prologB_right_item}, 
+                                    std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&compressB_left_item, &projectB_item, &compressB_right_item}, 
                                     std::vector<OutputTerminalType>{
-                                    OutputTerminalType(&compress_prologB_left_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&compress_doIt_funcB_tag}),
-                                    OutputTerminalType(&funcB_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {}),
-                                    OutputTerminalType(&compress_prologB_right_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {})})
+                                    OutputTerminalType(&compressB_left_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {}),
+                                    OutputTerminalType(&funcB_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {}),
+                                    OutputTerminalType(&compressB_right_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {})})
                               ),
 
 
@@ -1441,11 +1440,11 @@ struct addition_test : CnCContext {
                   GaxpyOp( 
                       1.0,
                       1.0,
-                      std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&funcA_coeff_compressed_item, &funcB_coeff_compressed_item}, 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&funcA_coeff_compressed_item, &funcB_coeff_compressed_item}, 
                       std::vector<OutputTerminalType>{
-                      OutputTerminalType(&funcA_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&gaxpyOP_tag}),
-                      OutputTerminalType(&gaxpy_result_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&reconstruct_prolog_tag}),
-                      OutputTerminalType(&funcB_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {})})
+                      OutputTerminalType(&funcA_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&gaxpyOP_tag}),
+                      OutputTerminalType(&gaxpy_result_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&reconstruct_prolog_tag}),
+                      OutputTerminalType(&funcB_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {})})
                 ),
 
     /*----------------------------------------------------------------*/
@@ -1455,9 +1454,9 @@ struct addition_test : CnCContext {
                             *this, 
                             "reconstruct_prolog_step", 
                             Reconstruct_Prolog( 
-                                std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&gaxpy_result_item}, 
+                                std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&gaxpy_result_item}, 
                                 std::vector<OutputTerminalType>{
-                                OutputTerminalType(&s_coeff_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&reconstruct_doIt_tag})})
+                                OutputTerminalType(&s_coeff_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&reconstruct_doIt_tag})})
                           ),
 
   
@@ -1468,10 +1467,10 @@ struct addition_test : CnCContext {
                           *this, 
                           "reconstruct_doIt_step", 
                           Reconstruct_doIt( 
-                              std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&s_coeff_item, &gaxpy_result_item}, 
+                              std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&s_coeff_item, &gaxpy_result_item}, 
                               std::vector<OutputTerminalType>{
-                                OutputTerminalType(&s_coeff_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&reconstruct_doIt_tag}),
-                                OutputTerminalType(&reconstruct_result_item, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&printer_tag})})
+                                OutputTerminalType(&s_coeff_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&reconstruct_doIt_tag}),
+                                OutputTerminalType(&reconstruct_result_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&printer_tag})})
                          ),
 
     /*----------------------------------------------------------------*/
@@ -1482,9 +1481,9 @@ struct addition_test : CnCContext {
                   *this, 
                   "norm2_f1_step", 
                   Norm2( 
-                      std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&projectA_item}, 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&projectA_item}, 
                       std::vector<OutputTerminalType>{
-                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&norm2_f1_tag})})
+                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_f1_tag})})
                  ),
 
     /*----------------------------------------------------------------*/
@@ -1495,9 +1494,9 @@ struct addition_test : CnCContext {
                   *this, 
                   "norm2_f2_step", 
                   Norm2( 
-                      std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&projectB_item}, 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&projectB_item}, 
                       std::vector<OutputTerminalType>{
-                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&norm2_f2_tag})})
+                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_f2_tag})})
                  ),
 
 
@@ -1509,9 +1508,9 @@ struct addition_test : CnCContext {
                   *this, 
                   "norm2_add_step", 
                   Norm2( 
-                      std::vector<CnC::item_collection<std::pair<int, int>, Node> *> {&reconstruct_result_item}, 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&reconstruct_result_item}, 
                       std::vector<OutputTerminalType>{
-                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, int>> *> {&norm2_add_tag})})
+                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_add_tag})})
                  )
 
 
@@ -1523,8 +1522,6 @@ struct addition_test : CnCContext {
       projectA_tag.prescribes(projectA_step, *this);
       projectB_tag.prescribes(projectB_step, *this);
       printer_tag.prescribes(printer_step, *this);
-      compress_prolog_FuncA_tag.prescribes( compress_prolog_FuncA_step, *this);
-      compress_prolog_FuncB_tag.prescribes( compress_prolog_FuncB_step, *this);
       compress_doIt_funcA_tag.prescribes( compress_doIt_funcA_step, *this);
       compress_doIt_funcB_tag.prescribes( compress_doIt_funcB_step, *this);
       gaxpyOP_tag.prescribes( gaxpyOp_step, *this);
@@ -1542,27 +1539,17 @@ struct addition_test : CnCContext {
 
       projectB_step.produces(projectB_item);
 
-      compress_prolog_FuncA_step.consumes( projectA_item);
-      compress_prolog_FuncA_step.produces( compress_prologA_left_item );
-      compress_prolog_FuncA_step.produces( compress_prologA_right_item );
-      compress_prolog_FuncA_step.produces( funcA_coeff_compressed_item );
-      
-      compress_prolog_FuncB_step.consumes( projectB_item);
-      compress_prolog_FuncB_step.produces( compress_prologB_left_item );
-      compress_prolog_FuncB_step.produces( compress_prologB_right_item );
-      compress_prolog_FuncB_step.produces( funcB_coeff_compressed_item );
-
-      compress_doIt_funcA_step.consumes( compress_prologA_left_item );
-      compress_doIt_funcA_step.consumes( compress_prologA_right_item );
+      compress_doIt_funcA_step.consumes( compressA_left_item );
+      compress_doIt_funcA_step.consumes( compressA_right_item );
       compress_doIt_funcA_step.produces( funcA_coeff_compressed_item);
-      compress_doIt_funcA_step.produces( compress_prologA_left_item);
-      compress_doIt_funcA_step.produces( compress_prologA_right_item);
+      compress_doIt_funcA_step.produces( compressA_left_item);
+      compress_doIt_funcA_step.produces( compressA_right_item);
 
-      compress_doIt_funcB_step.consumes( compress_prologB_left_item );
-      compress_doIt_funcB_step.consumes( compress_prologB_right_item );
+      compress_doIt_funcB_step.consumes( compressB_left_item );
+      compress_doIt_funcB_step.consumes( compressB_right_item );
       compress_doIt_funcB_step.produces( funcB_coeff_compressed_item);
-      compress_doIt_funcB_step.produces( compress_prologB_left_item );
-      compress_doIt_funcB_step.produces( compress_prologB_right_item );
+      compress_doIt_funcB_step.produces( compressB_left_item );
+      compress_doIt_funcB_step.produces( compressB_right_item );
 
       gaxpyOp_step.consumes( funcA_coeff_compressed_item);
       gaxpyOp_step.consumes( funcB_coeff_compressed_item);
@@ -1587,13 +1574,200 @@ struct addition_test : CnCContext {
 };
 
 
+/**********************************************************************/
+/* multiplication test
+/**********************************************************************/
+struct multiplication_test: CnCContext{
+   
+  /*----------------------------------------------------------------*/
+  /* Item Collections
+  /*----------------------------------------------------------------*/
+  CnC::item_collection<std::pair<int, pair<int, int>>, Node> projectA_item;
+  CnC::item_collection<std::pair<int, pair<int, int>>, Node> projectB_item; 
+  CnC::item_collection<std::pair<int, pair<int, int>>, Node> mul_item;
+  
+  /*----------------------------------------------------------------*/
+  /* Tag Collections
+  /*----------------------------------------------------------------*/
+  CnC::tag_collection<std::pair<int, pair<int, int>>> projectA_tag;
+  CnC::tag_collection<std::pair<int, pair<int, int>>> projectB_tag;
+  CnC::tag_collection<std::pair<int, pair<int, int>>> mul_tag;
+  CnC::tag_collection<std::pair<int, pair<int, int>>> printer_tag;
+  CnC::tag_collection<std::pair<int, pair<int, int>>> norm2_f1_tag;
+  CnC::tag_collection<std::pair<int, pair<int, int>>> norm2_f2_tag;
+  CnC::tag_collection<std::pair<int, pair<int, int>>> norm2_mul_tag;
 
+  /*----------------------------------------------------------------*/
+  /* Step Collections
+  /*----------------------------------------------------------------*/
+  using OutputTerminalType = OutputTerminal<std::pair<int, pair<int, int>>, Node>;
+
+  CnC::step_collection<Project> projectA_step;
+  CnC::step_collection<Project> projectB_step;
+  CnC::step_collection<BinaryOp> mul_step;
+  CnC::step_collection<Printer> printer_step;
+  CnC::step_collection<Norm2> norm2_f1_step;
+  CnC::step_collection<Norm2> norm2_f2_step;
+  CnC::step_collection<Norm2> norm2_mul_step;
+
+  /*----------------------------------------------------------------*/
+  /* CnCContext Constructor
+  /*----------------------------------------------------------------*/
+  multiplication_test(int k, double thresh, int max_level, int height, double (*funcA)(double), double (*funcB)(double))
+  : 
+    CnCContext( k, thresh, max_level, height),
+    projectA_item(*this),
+    projectB_item(*this), 
+    mul_item(*this), 
+    projectA_tag(*this), 
+    projectB_tag(*this), 
+    mul_tag(*this),
+    printer_tag(*this), 
+    norm2_f1_tag(*this),
+    norm2_f2_tag(*this),
+    norm2_mul_tag(*this),
+
+    /*----------------------------------------------------------------*/
+    /* Declare projectA_step
+    /*----------------------------------------------------------------*/
+    projectA_step(
+                  *this, 
+                  "projectA_step", 
+                  Project(
+                          funcA, 
+                          std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{},
+                          std::vector<OutputTerminalType> {
+                              OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&projectA_tag}),
+                              OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&mul_tag})}
+                          )
+                 ),
+
+    /*----------------------------------------------------------------*/
+    /* Declare projectB_step
+    /*----------------------------------------------------------------*/
+    projectB_step(
+                *this, 
+                "projectB_step", 
+                Project(
+                        funcB, 
+                        std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{},
+                        std::vector<OutputTerminalType> {
+                            OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&projectB_tag}),
+                            OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {})}
+                        )
+                ),
+    
+    /*----------------------------------------------------------------*/
+    /* Declare mul_step
+    /*----------------------------------------------------------------*/
+    mul_step(
+            *this, 
+            "mul_step", 
+            BinaryOp(
+                    &mul, 
+                    &mul_scale_factor, 
+                    std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&projectA_item, &projectB_item},
+                    std::vector<OutputTerminalType>{
+                        OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&mul_tag}),
+                        OutputTerminalType(&mul_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&printer_tag}),
+                        OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {})}
+                    )
+            ),
+
+    /*----------------------------------------------------------------*/
+    /* Declare printer_step
+    /*----------------------------------------------------------------*/
+    printer_step(
+                *this, 
+                "printer_step", 
+                Printer( 
+                  std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{&mul_item}, 
+                  std::vector<OutputTerminalType>{})
+                ),
+
+
+    /*----------------------------------------------------------------*/
+    /* Declare norm2_f1_step
+    /*----------------------------------------------------------------*/
+
+    norm2_f1_step( 
+                  *this, 
+                  "norm2_f1_step", 
+                  Norm2( 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&projectA_item}, 
+                      std::vector<OutputTerminalType>{
+                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_f1_tag})})
+                 ),
+
+    /*----------------------------------------------------------------*/
+    /* Declare norm2_f2_step
+    /*----------------------------------------------------------------*/
+
+    norm2_f2_step( 
+                  *this, 
+                  "norm2_f2_step", 
+                  Norm2( 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&projectB_item}, 
+                      std::vector<OutputTerminalType>{
+                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_f2_tag})})
+                 ),
+
+
+    /*----------------------------------------------------------------*/
+    /* Declare norm2_add_step
+    /*----------------------------------------------------------------*/
+
+    norm2_mul_step( 
+                  *this, 
+                  "norm2_add_step", 
+                  Norm2( 
+                      std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&mul_item}, 
+                      std::vector<OutputTerminalType>{
+                        OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_mul_tag})})
+                 )
+
+
+    
+    {
+      
+      /*----------------------------------------------------------------*/
+      /* Tag Prescription
+      /*----------------------------------------------------------------*/
+      projectA_tag.prescribes(projectA_step, *this);
+      projectB_tag.prescribes(projectB_step, *this);
+      mul_tag.prescribes(mul_step, *this);
+      printer_tag.prescribes(printer_step, *this);
+      norm2_f1_tag.prescribes(norm2_f1_step, *this);
+      norm2_f2_tag.prescribes(norm2_f2_step, *this);
+      norm2_mul_tag.prescribes(norm2_mul_step, *this);
+
+      /*----------------------------------------------------------------*/
+      /* Steps Produce Consume
+      /*----------------------------------------------------------------*/
+      projectA_step.produces(projectA_item);
+
+      projectB_step.produces(projectB_item);
+
+      mul_step.consumes(projectA_item);
+      mul_step.consumes(projectB_item);
+      mul_step.produces(projectA_item);
+      mul_step.produces(projectB_item);
+      mul_step.produces(mul_item);
+
+      printer_step.consumes(mul_item);
+
+      norm2_f1_step.consumes( projectA_item);
+      norm2_f2_step.consumes( projectB_item);
+      norm2_mul_step.consumes( mul_item);
+
+    }
+};
 
 
 /**********************************************************************/
-/* Project_test test
+/* gaxpy_sub_test test
 /**********************************************************************/
-struct Project_test: CnCContext{
+struct gaxpy_sub_test: CnCContext{
 
   /*----------------------------------------------------------------*/
   /* Item Collections
@@ -1629,10 +1803,7 @@ struct Project_test: CnCContext{
    CnC::tag_collection<std::pair< int, pair<int, int>>> gaxpyOP_tag;
    CnC::tag_collection<std::pair< int, pair<int, int>>> reconstruct_prolog_tag;
    CnC::tag_collection<std::pair< int, pair<int, int>>> reconstruct_doIt_tag;
-
-   CnC::tag_collection<std::pair<int, pair<int, int>>>> norm2_f1_tag;
-   CnC::tag_collection<std::pair<int, pair<int, int>>>> norm2_f2_tag;
-   CnC::tag_collection<std::pair<int, pair<int, int>>>> norm2_add_tag;
+   CnC::tag_collection<std::pair<int, pair<int, int>>> norm2_tag;
 
    /*----------------------------------------------------------------*/
   /* Step Collections
@@ -1649,13 +1820,9 @@ struct Project_test: CnCContext{
    CnC::step_collection<GaxpyOp> gaxpyOp_step;
    CnC::step_collection<Reconstruct_Prolog> reconstruct_prolog_step;
    CnC::step_collection<Reconstruct_doIt>  reconstruct_doIt_step;
+   CnC::step_collection<Norm2> norm2_step;
 
-   CnC::step_collection<Norm2> norm2_f1_step;
-   CnC::step_collection<Norm2> norm2_f2_step;
-   CnC::step_collection<Norm2> norm2_add_step;
-
-
-  Project_test( int k, double thresh, int max_level,  int height, double (*funcA)(double), double (*funcB)(double))
+  gaxpy_sub_test( int k, double thresh, int max_level,  int height, double (*funcA)(double), double (*funcB)(double))
   :
   CnCContext( k, thresh, max_level, height),
   projectA_item(*this),
@@ -1682,10 +1849,8 @@ struct Project_test: CnCContext{
   gaxpyOP_tag(*this),
   reconstruct_prolog_tag(*this),
   reconstruct_doIt_tag(*this),
+  norm2_tag(*this),
 
-  norm2_f1_tag(*this),
-  norm2_f2_tag(*this),
-  norm2_add_tag(*this),
   /*----------------------------------------------------------------*/
   /* Declare projectA_step
   /*----------------------------------------------------------------*/
@@ -1834,7 +1999,19 @@ struct Project_test: CnCContext{
             Printer( 
               std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{&subtract_2_item}, 
               std::vector<OutputTerminalType>{})
-            )
+            ),
+
+  /*----------------------------------------------------------------*/
+  /* Declare subtract_2_step
+  /*----------------------------------------------------------------*/
+  norm2_step( 
+            *this, 
+            "norm2_step", 
+            Norm2( 
+                std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *> {&subtract_2_item}, 
+                std::vector<OutputTerminalType>{
+                  OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair<int, pair<int, int>>> *> {&norm2_tag})})
+           )
 
     {
 
@@ -1851,6 +2028,7 @@ struct Project_test: CnCContext{
       gaxpyOP_tag.prescribes( gaxpyOp_step, *this);
       reconstruct_prolog_tag.prescribes( reconstruct_prolog_step, *this);
       reconstruct_doIt_tag.prescribes( reconstruct_doIt_step, *this);
+      norm2_tag.prescribes( norm2_step, *this);
 
       /*----------------------------------------------------------------*/
       /* Steps Produce Consume
@@ -1899,7 +2077,7 @@ struct Project_test: CnCContext{
       subtract_2_step.produces(subtract_2_item);
 
       printer_step.consumes(subtract_2_item);
-
+      norm2_step.consumes( subtract_2_item);
   }
 
   // void check_result( CnC::item_collection<std::pair< int, pair<int, int>>, Node> result_h, int n, int l, int h){
@@ -1932,7 +2110,3 @@ struct Project_test: CnCContext{
 
 
 };
-
-
-
-
