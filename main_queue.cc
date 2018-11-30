@@ -122,18 +122,18 @@ void Gaxpy_Sub( int k, int max_level, double thresh, int height ){
   /*****************************************************************/
   /* Multiplication test 
   /*****************************************************************/
-  for( int j = 0; j < 3; j++ ){
+  for( int j = 0; j < 1; j++ ){
     
       gaxpy_sub_test test_obj( k, thresh, max_level, height, test[0], test[j]);
       test_obj.projectA_tag.put(make_pair( 0, std::make_pair(0, 0)));
+      // test_obj.printer_tag.put(make_pair( 0, std::make_pair(0, 0)));
       test_obj.projectB_tag.put(make_pair( 0, std::make_pair(0, 0))); 
       test_obj.wait();
 
-      test_obj.norm2_tag.put(make_pair( 0, std::make_pair(0, 0)));
-      test_obj.wait();
+      // test_obj.norm2_tag.put(make_pair( 0, std::make_pair(0, 0)));
+      // test_obj.wait();
       cout << "norm of (test[0]-test[" << j <<  "])- (test[0]-test[" <<j << "]) is  " << sqrt( test_obj.norm2_result[0]) << "\n";
   }
-
 }
 
 
@@ -167,18 +167,18 @@ int main(int argc, char *argv[]) {
    /*--------------------------------*/
    /*    DIFFERENTIATION TEST        */
    /*--------------------------------*/
-   Differentiation( k, max_level, thresh, height );
+   // Differentiation( k, max_level, thresh, height );
 
    /*--------------------------------*/
    /*    ADDITION TEST               */
    /*--------------------------------*/
-   Addition(k, max_level, thresh, height);
+   // Addition(k, max_level, thresh, height);
 
 
    /*--------------------------------*/
    /*    MULTIPLICATION TEST         */
    /*--------------------------------*/
-   Multiplication( k, max_level, thresh, height );
+   // Multiplication( k, max_level, thresh, height );
 
    /*--------------------------------*/
    /*    MULTIPLICATION TEST         */

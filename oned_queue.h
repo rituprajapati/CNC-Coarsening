@@ -569,10 +569,10 @@ Vector Project::sValue(int n, int l, CnCContext &context) const {
 /**********************************************************************/
 /* Project::execute
 /**********************************************************************/
-int Project::execute(const std::pair< int, std::pair<int, int>> &node, CnCContext &context) const {
+int Project::execute(const std::pair< int, std::pair<int, int>> &root_node, CnCContext &context) const {
 
   queue<std::pair<int, std::pair<int, int>>> subtree_queue;
-  subtree_queue.push(node);
+  subtree_queue.push(root_node);
   int k = context.k;
 
   //Current subtree will be executed inside this thread only
@@ -696,13 +696,26 @@ int BinaryOp::execute(const std::pair< int, pair<int, int>> &root_node, CnCConte
   return CnC::CNC_Success;
 }
 
+struct compress_output {
+  pair<int, pair<int, int>> node;
+  Node nodeInfo;
+};
+
+string key(int h, int n, int l){
+  return to_string(h)+"+"+to_string(n)+"+"+to_string(l);
+}
 /**********************************************************************/
 /* Compress_doIt::execute
 /**********************************************************************/
 int Compress_doIt::execute( const std::pair< int, pair<int, int>> &root_node, CnCContext &context ) const {
 
+  // cout << "Tile started " << root_node.first << "  " << root_node.second.first << "  " << root_node.second.second << "\n";
+  std::pair< int, pair<int, int>> tile_parent = make_pair(context.max_height - 1, make_pair(root_node.second.first-1, root_node.second.second/2));
   stack<std::pair< int, pair<int, int>>> subtree_stack;
   queue<std::pair< int, pair<int, int>>> levels;
+  unordered_map<string, Node> mp_left, mp_right, mp_input;
+  vector<struct compress_output> output;
+
   levels.push(root_node);
   int k = context.k;
 
@@ -718,7 +731,10 @@ int Compress_doIt::execute( const std::pair< int, pair<int, int>> &root_node, Cn
     n = curr_node.second.first;
     l = curr_node.second.second;
     new_h = (h+1) % context.max_height;
+
     input_terminals[1]->get(curr_node, nodeInfo);
+    string curr_key = key(h, n, l);
+    mp_input[curr_key] = nodeInfo;
 
     //If curr node's children are supposed to be executed by this thread put them in queue
     if( new_h != 0 &&  nodeInfo.has_children ){
@@ -730,10 +746,7 @@ int Compress_doIt::execute( const std::pair< int, pair<int, int>> &root_node, Cn
   //Process each node in stack 
   while( !subtree_stack.empty() ){
 
-    Node nodeInfo;
-    Node left;
-    Node right;
-
+    Node nodeInfo, left, right;
     std::pair< int, pair<int, int>> node = subtree_stack.top();
     subtree_stack.pop();
 
@@ -743,44 +756,76 @@ int Compress_doIt::execute( const std::pair< int, pair<int, int>> &root_node, Cn
     l = node.second.second;
     new_h = h == 0 ? context.max_height - 1 : h-1;
 
-    input_terminals[1]->get(node, nodeInfo);
+    string node_key = key(h, n, l);
+    string p_key = key(new_h, n-1, l/2);
+
+    struct compress_output new_output;
+    new_output.node = node;
+    nodeInfo = mp_input[node_key];
 
     //current node is a leaf node
     if( !nodeInfo.has_children){
 
-        output_terminals[1].put( node, Node( n, l, k, Vector(), Vector(k), false ));
-        if( l & 0x1uL)
-          output_terminals[2].put( std::make_pair( new_h, make_pair( n-1, l/2)), nodeInfo);
-        else
-          output_terminals[0].put( std::make_pair( new_h, make_pair( n-1, l/2)), nodeInfo);
+        new_output.nodeInfo = Node( n, l, k, Vector(), Vector(k), false );
 
-        continue;
-    }
-
-    input_terminals[0]->get(node, left);
-    input_terminals[2]->get(node, right);
-
-    Vector s( left.s | right.s );
-    Vector d(s * (*(context.hgT)));
-
-    Vector sValue(d.data, 0, k);
-    Vector dValue(d.data, k, 2 * k);
-
-    //If at root node place both s and d
-    if( n == 0){
-      output_terminals[1].put( node, Node( n, l, k, sValue, dValue, true) );
+        if( l & 0x1uL){
+          mp_right[p_key] = Node( n-1, l/2, k, nodeInfo.s, Vector(), false );
+        }
+        else{
+          mp_left[p_key] = Node( n-1, l/2, k, nodeInfo.s, Vector(), false );
+        }
     }
     else {
-      output_terminals[1].put( node, Node( n, l, k, Vector(), dValue, true) );
-      if( l & 0x1uL){
-        output_terminals[2].put( std::make_pair( new_h, make_pair( n-1, l/2)), Node( n-1, l/2, k, sValue, Vector(), false ));
+      if( mp_left.find(node_key) != mp_left.end() ){
+        left =  mp_left[node_key];
+      } else {
+        input_terminals[0]->get(node, left);
       }
-      else{
-        output_terminals[0].put( std::make_pair( new_h, make_pair( n-1, l/2)), Node( n-1, l/2, k, sValue, Vector(), false ));
-      }   
+
+      if( mp_right.find(node_key) != mp_right.end() ){
+        right =  mp_right[node_key];
+      } else {
+        input_terminals[0]->get(node, right);
+      }
+      Vector s( left.s | right.s );
+      Vector d(s * (*(context.hgT)));
+
+      Vector sValue(d.data, 0, k);
+      Vector dValue(d.data, k, 2 * k);
+
+      //If at root node place both s and d
+      if( n == 0){
+        new_output.nodeInfo = Node( n, l, k, sValue, dValue, true);
+      }
+      else {
+        new_output.nodeInfo = Node( n, l, k, Vector(), dValue, true);
+
+        if( l & 0x1uL){
+          mp_right[p_key] = Node( n-1, l/2, k, sValue, Vector(), true );
+        }
+        else{
+          mp_left[p_key] = Node( n-1, l/2, k, sValue, Vector(), true );
+        }   
+      }
     }
+    output.push_back(new_output);
   }
   
+  //Put the results
+  string tile_p_key = key(tile_parent.first, tile_parent.second.first, tile_parent.second.second);
+
+  if( root_node.second.second & 0x1uL){
+    output_terminals[2].put(tile_parent, mp_right[tile_p_key]);
+  }
+  else{
+    output_terminals[0].put(tile_parent, mp_left[tile_p_key]);
+  }   
+
+  // cout << output.size() << "\n";
+  for( int i = 0 ; i < output.size() ; i++){
+    output_terminals[1].put(output[i].node, output[i].nodeInfo);
+  }
+
   return CnC::CNC_Success;
 }
 
@@ -1091,7 +1136,7 @@ int Printer::execute(const std::pair<int, pair<int, int>> &node, CnCContext &con
     Node nodeInfo;
     input_terminals[0]->get(curr_node, nodeInfo);
 
-    if( !nodeInfo.has_children )  
+    // if( !nodeInfo.has_children )  
     std::cout << "Printer:: Node with info: (Key:"
               << h << " (" 
               << n << ", " 
@@ -1862,7 +1907,8 @@ struct gaxpy_sub_test: CnCContext{
                       std::vector<CnC::item_collection<std::pair< int, pair<int, int>>, Node> *>{},
                       std::vector<OutputTerminalType> {
                           OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&projectA_tag}),
-                          OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&compress_doIt_funcA_tag, &subtract_1_tag})}
+                          OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&compress_doIt_funcA_tag})}
+                          // OutputTerminalType(&projectA_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&compress_doIt_funcA_tag, &subtract_1_tag})}
                       )
               ),
 
@@ -1877,6 +1923,7 @@ struct gaxpy_sub_test: CnCContext{
                       std::vector<CnC::item_collection<std::pair< int, pair<int, int>>, Node> *>{},
                       std::vector<OutputTerminalType> {
                           OutputTerminalType(nullptr, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&projectB_tag}),
+                          // OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *>{})}
                           OutputTerminalType(&projectB_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *>{&compress_doIt_funcB_tag})}
                       )
               ),
@@ -1927,7 +1974,7 @@ struct gaxpy_sub_test: CnCContext{
                                 std::vector<CnC::item_collection<std::pair< int, pair<int, int>>, Node> *> {&compressA_left_item, &projectA_item, &compressA_right_item}, 
                                 std::vector<OutputTerminalType>{
                                 OutputTerminalType(&compressA_left_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {}),
-                                OutputTerminalType(&funcA_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&gaxpyOP_tag}),
+                                OutputTerminalType(&funcA_coeff_compressed_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {&printer_tag}),
                                 OutputTerminalType(&compressA_right_item, std::vector<CnC::tag_collection<std::pair< int, pair<int, int>>> *> {})})
                           ),
 
@@ -1997,7 +2044,7 @@ struct gaxpy_sub_test: CnCContext{
             *this, 
             "printer_step", 
             Printer( 
-              std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{&subtract_2_item}, 
+              std::vector<CnC::item_collection<std::pair<int, pair<int, int>>, Node> *>{&funcA_coeff_compressed_item}, 
               std::vector<OutputTerminalType>{})
             ),
 
@@ -2076,13 +2123,11 @@ struct gaxpy_sub_test: CnCContext{
       subtract_2_step.produces(reconstruct_result_item);
       subtract_2_step.produces(subtract_2_item);
 
-      printer_step.consumes(subtract_2_item);
+      printer_step.consumes(funcA_coeff_compressed_item);
       norm2_step.consumes( subtract_2_item);
   }
 
   // void check_result( CnC::item_collection<std::pair< int, pair<int, int>>, Node> result_h, int n, int l, int h){
-
-
   //   Node node_1, node_h;
   //   int new_h;
 
@@ -2107,6 +2152,5 @@ struct gaxpy_sub_test: CnCContext{
   //     cout << "Error!\n";
   //   }
   // }
-
 
 };
